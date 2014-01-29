@@ -1,11 +1,42 @@
 import std.stdio;
+import std.conv;
+import std.typecons;
 
 import buffer, shader;
 
 import derelict.opengl3.gl3;
 import derelict.glfw3.glfw3;
 
+struct GLFW(bool mock = false)
+{
 
+	auto opDispatch(string s, T...)(T args)
+	{
+		string fnName = "glfw" ~ s;
+		static assert(is(typeof(&mixin("fnName"))));
+
+		// Call the C binding
+		//writeln("Calling " ~ s);
+		mixin("return glfw" ~ s ~ "(args);");
+	}
+}
+
+struct GL(bool mock = false)
+{
+
+
+	auto opDispatch(string s, T...)(T args)
+	{
+		string fnName = "gl" ~ s;
+		static assert(is(typeof(&mixin("fnName"))));
+
+		auto copy = args;
+
+		// Call the C binding
+		writeln("Calling " ~ s);
+		mixin("return gl" ~ s ~ "(args);");
+	}
+}
 
 void main(string[] args)
 {
@@ -15,15 +46,18 @@ void main(string[] args)
 	if (!glfwInit())
 		throw new Exception("Failed to initialize GLFW3");
 	scope(exit) glfwTerminate();
+
+	auto GLFW = new GLFW!();
+	auto GL = new GL!();
  
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	GLFW.WindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	GLFW.WindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	GLFW.WindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	GLFW.WindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 	auto window = glfwCreateWindow(800, 600, "GLASS", null, null);
 	assert(window !is null);
-	glfwMakeContextCurrent(window);
- 
+	GLFW.MakeContextCurrent(window);
+
 	auto vers = DerelictGL3.reload();
 
 
@@ -38,18 +72,25 @@ void main(string[] args)
 	vertArray.bind(0, GL_FLOAT, 3, 3 * float.sizeof);
 
 
-	glClearColor(0.2, 0.2, 0.2, 1.0);
+	GL.ClearColor(0.2, 0.2, 0.2, 1.0);
  
-	while (!glfwWindowShouldClose(window))  {
+	int bob = 0;
+
+	while (!GLFW.WindowShouldClose(window))  {
  
-		glfwPollEvents();
-		if ( glfwGetKey( window, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
-			break;
+		GLFW.PollEvents();
+					
+		if (bob == 0)
+		{
+			if ( GLFW.GetKey( window, GLFW_KEY_ESCAPE ) == GLFW_PRESS )
+				break;
  
-		glClear(GL_COLOR_BUFFER_BIT);
-		glDrawArrays(GL_TRIANGLES, 0, cast(int)rawVerts.length);
+			GL.Clear(GL_COLOR_BUFFER_BIT);
+			GL.DrawArrays(GL_TRIANGLES, 0, cast(int)rawVerts.length);
  
-		glfwSwapBuffers(window);
+			GLFW.SwapBuffers(window);
+			bob++;
+		}
 	}
 }
 
