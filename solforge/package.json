@@ -1,0 +1,7 @@
+{	
+		"name": "solforgesim",
+		"description": "A simulator and possibly AI for solforge",
+		"authors": ["Matt Dudley"],
+		"homepage": "http://www.github.com/pontifechs/d-sandbox/solforge",
+		"license": "GPL-2.0",
+}
