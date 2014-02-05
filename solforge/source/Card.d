@@ -65,7 +65,7 @@ protected:
 }
 
 
-class Creature : Card
+class CreatureCard : Card
 {
 public:
 	ubyte attack() const @property { return m_attack; }
@@ -97,7 +97,7 @@ protected:
 }
 
 
-class Spell : Card
+class SpellCard : Card
 {
 public:
 	this(string name, string initials, Faction faction, Rarity rarity)
