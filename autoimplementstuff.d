@@ -10,11 +10,8 @@ struct Call
 	IArguments args = null;
 }
 
-// Empty interface to allow a non-templated member variable in Call (Slick)
 interface IArguments
 {
-	bool opEquals(Object other);
-	string toString();
 }
 
 template Arguments (U...)

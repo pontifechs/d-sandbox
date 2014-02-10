@@ -21,14 +21,13 @@ struct GLFW(bool mock = false)
 	}
 }
 
-struct GL(bool mock = false)
+class GL
 {
-
-
 	auto opDispatch(string s, T...)(T args)
+		if (is(typeof(&mixin("gl" ~ s))))
 	{
 		string fnName = "gl" ~ s;
-		static assert(is(typeof(&mixin("fnName"))));
+		//static assert(is(typeof(&mixin("fnName"))),"tits");
 
 		auto copy = args;
 
@@ -48,7 +47,7 @@ void main(string[] args)
 	scope(exit) glfwTerminate();
 
 	auto GLFW = new GLFW!();
-	auto GL = new GL!();
+	auto GL = new GL();
  
 	GLFW.WindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	GLFW.WindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -73,7 +72,8 @@ void main(string[] args)
 
 
 	GL.ClearColor(0.2, 0.2, 0.2, 1.0);
- 
+
+	 
 	int bob = 0;
 
 	while (!GLFW.WindowShouldClose(window))  {
