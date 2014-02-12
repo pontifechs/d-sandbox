@@ -1,0 +1,21 @@
+{	
+		"name": "deagle",
+		"description": "A foundation for graphics engines in D.",
+		"authors": ["Matt Dudley"],
+		"homepage": "http://www.github.com/pontifechs/d-sandbox/deagle",
+		"license": "GPL-2.0",
+
+		"dependencies": {
+				"derelict-gl3" : "~master",
+				"derelict-glfw3" : "~master"
+		},
+
+		"configurations": 
+		[
+				{
+						"name": "unittest",
+						"targetType": "executable",
+						"dflags-dmd": ["-main"]
+				}
+		]
+}
