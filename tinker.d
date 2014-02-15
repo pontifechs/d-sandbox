@@ -1,26 +1,36 @@
+module tinker;
+
+import std.typecons;
 import std.stdio;
+import std.traits;
 
-struct Foo
+class Bar(uint rows, uint cols, T = float)
+  if (isNumeric!(T) && rows > 0 && cols > 0)
 {
-public:
-	int i;
-	int j;
-
-	this(int i)(int j, int k)
-	{
-		this.i = i + j;
-		this.j = i + k;
-	}
-
-	// static notOpCall(int i)(int j, int k)
-	// {
-	// 	return Foo(i+j,i+k);
-	// }
+	this() {}
 }
+
+
+class Foo(uint size, T = float) : Bar!(1,size,T)
+  if (isNumeric!(T) && size > 0)
+{
+
+	this() {}
+	
+}
+
+
+void ufcs(Foo!(2) val)
+{
+	writeln(val);
+}
+
 
 void main()
-{	
-	auto bob = Foo!(1)(2,3); //Error: template instance Foo!1 Foo is not a template declaration, it is a struct
-}
+{
+	
+	auto bob = new Foo!(2,float)();
+	bob.ufcs();
 
+}
 

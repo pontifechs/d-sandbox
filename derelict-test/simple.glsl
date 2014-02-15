@@ -2,8 +2,8 @@
  
 vertex:
 layout(location=0) in vec3 position;
- 
-//uniform mat4 projection;
+
+uniform mat4 projection;
 //uniform mat4 view;
 //uniform mat4 model;
  
@@ -14,6 +14,7 @@ void main()
 }
  
 fragment:
+uniform mat4 projection;
 out vec3 color;
 void main()
 {

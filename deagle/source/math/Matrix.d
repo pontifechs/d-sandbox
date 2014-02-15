@@ -8,31 +8,12 @@ import std.conv; //to!string
 import std.math; // approxEqual
 import std.algorithm; // equal
 
-// TODO:: Once wrap can do NVI, we will want to get rid of this.
-import deagle.graphics.Uniform;
-
 // A column-major square Matrix of type T of size size.
-class Matrix(uint colCt = 4, uint rowCt = 4, T = float) : IUniform!(T)
+class Matrix(uint colCt = 4, uint rowCt = 4, T = float) 
 	if (isNumeric!(T) && colCt > 0 && rowCt > 0) // Only valid on numeric types
 {
 	// Data store
 	protected T[colCt * rowCt] m_data;
-
-	// Conform to IUniform interface (not explicitly for dependency reasons)
-	public uint rows() const @property
-	{
-		return rowCt;
-	}
-
-	public uint cols() const @property 
-	{
-		return colCt;
-	}
-	
-	public const(T[]) data() const @property
-	{
-		return this.m_data[];
-	}
 	
 	// Default matrix is the Identity
 	this()
@@ -80,9 +61,9 @@ class Matrix(uint colCt = 4, uint rowCt = 4, T = float) : IUniform!(T)
 	{
 
 		string ret = "";
-		for (uint row = 0; row < rows; ++row)
+		for (uint row = 0; row < rowCt; ++row)
 		{
-			for (uint col = 0; col < cols; ++col)
+			for (uint col = 0; col < colCt; ++col)
 			{
 				ret ~= to!string(m_data[i(row,col)]) ~ " ";
 			}
@@ -104,7 +85,7 @@ class Matrix(uint colCt = 4, uint rowCt = 4, T = float) : IUniform!(T)
 	{
 		// Build a vector from this row of the matrix
 		T[colCt] rowVecData = 0;
-		for (uint i = 0; i < cols; ++i)
+		for (uint i = 0; i < colCt; ++i)
 		{
 			rowVecData[i] = m_data[this.i(row,i)];
 		}
@@ -115,7 +96,7 @@ class Matrix(uint colCt = 4, uint rowCt = 4, T = float) : IUniform!(T)
 	Matrix!(1, rowCt, T) col(uint col) const
 	{
 		T[rowCt] colVecData = 0;
-		for (uint i = 0; i < rows; ++i)
+		for (uint i = 0; i < rowCt; ++i)
 		{
 			colVecData[i] = m_data[this.i(i,col)];
 		}
