@@ -12,9 +12,16 @@ import std.algorithm; // equal
 class Matrix(uint colCt = 4, uint rowCt = 4, T = float) 
 	if (isNumeric!(T) && colCt > 0 && rowCt > 0) // Only valid on numeric types
 {
+protected:
 	// Data store
-	protected T[colCt * rowCt] m_data;
-	
+	T[colCt * rowCt] m_data;
+
+public:	
+	const(T)* ptr() @property
+	{
+		return m_data.ptr;
+	}
+
 	// Default matrix is the Identity
 	this()
 	{		
@@ -129,8 +136,6 @@ class Matrix(uint colCt = 4, uint rowCt = 4, T = float)
 
 					newData[i(row,col)] += rowVec.m_data[rowrow] * colVec.m_data[rowrow];
 				}
-
-
 
 				// element-wise multiply, then add
 				auto mults = new T[rowCt];

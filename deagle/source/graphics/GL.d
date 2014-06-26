@@ -68,6 +68,7 @@ public:
 	}
 
 
+
 	static if (mocked)
 	{
 		CallHistory history;
@@ -84,9 +85,13 @@ private:
 
 // unittest // opDispatch debugging (bopDispatch) Due to bugzilla 8387
 // {
-// 	auto GL = GL(Yes.Mock);
-//  scope(exit) GL.instance = null;
-// 	GL.bopDispatch!"ClearColor"(0.2, 0.2, 0.2, 1.0);
+// 	import deagle.math.Matrix;
+
+// 	auto m4f = new Matrix!(4,4,float)();
+
+// 	auto GL = GL();
+// 	scope(exit) GL.instance = null;
+// 	GL.bopDispatch!"UniformMatrix4fv"(0, 1, GL_FALSE, m4f.ptr);
 	
 // }
 

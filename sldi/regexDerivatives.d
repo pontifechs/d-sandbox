@@ -1,10 +1,15 @@
-module tinker;
+module regexDerivatives;
 
 import std.stdio;
 
+
+// Pattern matching from Regex tree
 abstract class Regex
 {
 public:
+
+
+
 	bool match(string haystack)
 	{
 		// Base case -- (pulled all of the characters off the string
@@ -47,7 +52,7 @@ public:
 	}
 }
 
-// Empty string language {""}
+
 class Epsilon : Regex
 {
 public:
@@ -105,7 +110,7 @@ public:
 	}
 }
 
-// Union of two languages: ie {L1 U L2}
+
 class Union : Regex
 {
 private:
@@ -210,10 +215,62 @@ public:
 	}
 }
 
-
-void main(string[] args)
+class Complement : Regex
 {
-	writeln("Unit Tests complete!");
+private:
+	Regex lang;
+
+public:
+	this(Regex lang)
+	{
+		this.lang = lang;
+	}
+
+	override Regex derive(char c)
+	{
+		return new Complement(lang.derive(c));
+	}
+
+	// If the empty string is in lang, it won't be in lang's complement, by definition.
+	override bool nullable() @property
+	{
+		return !lang.nullable();
+	}
+
+	override string toString()
+	{
+		return "~(" ~ lang.toString() ~ ")";
+	}
+}
+
+class Intersect : Regex
+{
+private:
+	Regex lhs;
+	Regex rhs;
+
+public:
+	this(Regex lhs, Regex rhs)
+	{
+		this.lhs = lhs;
+		this.rhs = rhs;
+	}
+
+	override Regex derive(char c)
+	{
+		return new Intersect(lhs.derive(c), rhs.derive(c));
+	}
+
+	// "" must be in both sides to appear in the resulting intersection
+	override bool nullable() @property
+	{
+		return lhs.nullable && rhs.nullable;
+	}
+
+	override string toString()
+	{
+		return "(" ~ lhs.toString() ~ " ^ " ~ rhs.toString() ~ ")";
+	}
 }
 
 // Start with Primitive, as Empty and Epsilon are trivial.
@@ -302,6 +359,42 @@ unittest // Concat
 	assert(!foo.match("foof"));
 }
 
+unittest // Complement
+{
+	auto f = new Primitive('f');
+	auto o = new Primitive('o');
+
+	auto oo = new Concat(o, o);
+	auto foo = new Concat(f, oo);
+
+	auto notFoo = new Complement(foo);
+	assert(!notFoo.match("foo"));
+	assert(notFoo.match("bar"));
+	
+}
+
+unittest // Intersection
+{
+	auto f = new Primitive('f');
+	auto o = new Primitive('o');
+	auto b = new Primitive('b');
+	auto a = new Primitive('a');
+	auto r = new Primitive('r');
+	auto z = new Primitive('z');
+
+	auto foo = new Concat(f, new Concat(o, o));
+	auto bar = new Concat(b, new Concat(a, r));
+	auto baz = new Concat(b, new Concat(a, z));
+
+	auto fooOrBar = new Union(foo, bar);
+	auto barOrBaz = new Union(bar, baz);
+	
+  // (foo|bar)&(bar|baz)
+	auto intersect = new Intersect(fooOrBar, barOrBaz);
+	assert(intersect.match("bar"));
+	assert(!intersect.match("foo"));
+	assert(!intersect.match("baz"));
+}
 
 unittest // More interesting things
 {
@@ -318,7 +411,7 @@ unittest // More interesting things
 	auto a = new Primitive('a');
 	auto r = new Primitive('r');
 
-	// (bar)
+
 	auto bar = new Concat(b, new Concat(a, r));
 	assert(bar.match("bar"));
 	assert(!bar.match("foo"));

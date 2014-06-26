@@ -5,17 +5,13 @@
 		"homepage": "http://www.github.com/pontifechs/d-sandbox/deagle",
 		"license": "GPL-2.0",
 
+		"dflags-dmd": ["-J."],
+
+		"targetType": "executable",
+
 		"dependencies": {
 				"derelict-gl3" : "~master",
-				"derelict-glfw3" : "~master"
+				"derelict-glfw3" : "~master",
+				"pegged": "~master"
 		},
-
-		"configurations": 
-		[
-				{
-						"name": "unittest",
-						"targetType": "executable",
-						"dflags-dmd": ["-main"]
-				}
-		]
 }
