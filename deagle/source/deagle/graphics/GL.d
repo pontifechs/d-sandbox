@@ -14,6 +14,7 @@ import deagle.util.CallHistory;
 // as well as insert instrumentation/logging code to
 // collect statistics and other such niceities.
 
+
 // If we're running unittests, use the mock.
 // (may at some point replace with a different version e.g. mockGLCalls or something)
 version(unittest)
@@ -67,8 +68,6 @@ public:
 		}
 	}
 
-
-
 	static if (mocked)
 	{
 		CallHistory history;
@@ -77,11 +76,13 @@ public:
 
 private:
 	// Disallow construction
-	this() { }
+	this() {};
 
 	static MockableGL instance;
 
 }
+
+
 
 // unittest // opDispatch debugging (bopDispatch) Due to bugzilla 8387
 // {
@@ -98,10 +99,11 @@ private:
 unittest // Calls are forwarded properly, failing to compile if they don't exist.
 {
 	import std.traits; 
-
+	
+	GL.instance = null;
 	auto GL = GL();
-
-	assert(!__traits(compiles, GL.THISDOESNTEXIST(1,2,3)), 
+	
+ 	assert(!__traits(compiles, GL.THISDOESNTEXIST(1,2,3)), 
 				 "Compiled with nonsense GL call");	
 	assert(__traits(compiles, GL.ClearColor(0.2, 0.2, 0.2, 1.0)), 
 				 "Didn't compile real GL call");
@@ -112,11 +114,11 @@ unittest // Calls are forwarded properly, failing to compile if they don't exist
 
 unittest // Logging
 {
-	auto GL = GL();
-	scope(exit) GL.instance = null;
-	
-	auto history = CallHistory();
 
+	GL.instance = null;
+	auto GL = GL();
+	auto history = CallHistory();
+	
 	// Make some calls
 	GL.ClearColor(0.2, 0.2, 0.2, 1.0);
 	history ~= Call.make!(glClearColor)(0.2, 0.2, 0.2, 1.0);
