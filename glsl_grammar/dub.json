@@ -1,0 +1,10 @@
+{
+	"name": "glsl_grammar",
+	"description": "A minimal D application.",
+	"copyright": "Copyright © 2014, mdudley",
+	"authors": ["mdudley"],
+    "dflags-dmd" : ["-J."],
+	"dependencies": {
+	    "pegged" : "~master"
+    }
+}
