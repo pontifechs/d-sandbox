@@ -62,9 +62,9 @@ Selection <
 / LogicalOr ("?" LogicalOr ":" LogicalOr)?
 
 AssignmentOps <
-/ Selection (Op Selection)?
+/ Selection (AssignOp Selection)?
 
-Op < ">>>="
+AssignOp < ">>>="
 / "^^=" / ">>=" / "<<="
 / "~=" / "+=" / "-=" / "*=" / "^=" / "|=" / "&=" / "/="
 / "="
@@ -294,6 +294,11 @@ InterpolationQualifier <-
 
 PreciseQualifier <-
 / "precise"
+
+PrecisionQualifier <-
+/ "highp"
+/ "mediump"
+/ "lowp"
 
 SingleTypeQualifier <-
 / StorageQualifier
