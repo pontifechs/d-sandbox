@@ -12,24 +12,30 @@ mixin(grammar(GLSL_WIP));
 alias Tuple!(string[], "tree", bool, "expected") TestCaseInfo;
 
 
-
 // identifier
 unittest
 {
 	writeln("Running Identifier cases...");
 
 	TestCaseInfo[string] cases = [ 
-		"bool " : TestCaseInfo(["bool"], false),
+		"bool   " : TestCaseInfo(["bool"], false),
 		"boolVar" : TestCaseInfo(["boolVar"], true),
 		"vec2bool" : TestCaseInfo(["vec2bool"], true),
+		"true " : TestCaseInfo(["true"], false),
+		"const  " : TestCaseInfo(["const"], false),
+		"high_precision " : TestCaseInfo(["high_precision"], false),
+		"subroutine " : TestCaseInfo(["subroutine"], false),
 		];
-
 
 	foreach (testCase; cases.keys)
 	{
 		auto parseTree = GLSL.Identifier(testCase);
 		auto info = cases[testCase];
 
+		// writeln(parseTree);
+		// writeln(parseTree.matches);
+		// writeln(info.tree);
+ 
 		assert((parseTree.matches == info.tree) == info.expected, "Fail: " ~ testCase);
 	}
 }
@@ -381,75 +387,104 @@ unittest
 	}
 }
 
-
-
-void main()
+// Qualifier
+unittest
 {
-	import derelict.opengl3.gl3;
-	import derelict.glfw3.glfw3;
+	writeln("Running TypeQualifier cases...");
 
-	import std.string;
+	TestCaseInfo[string] cases = [ 
+		"layout ( bob = 2 )" : TestCaseInfo(["layout" , "(", "bob", "=", "2", ")"], true),
+		"layout ( bob =2, sue) " : TestCaseInfo(["layout", "(", "bob", "=", "2", ",",
+																						 "sue", ")"], true),
+		];
 
-	DerelictGL3.load();
-	DerelictGLFW3.load();
-
-
-	if (!glfwInit())
+	foreach (testCase; cases.keys)
 	{
-		writeln("couldn't load glfw");
+		auto parseTree = GLSL.TypeQualifier(testCase);
+		auto info = cases[testCase];
+
+		// writeln(parseTree);
+		// writeln(parseTree.matches);
+		// writeln(info.tree);
+
+		assert((parseTree.matches == info.tree) == info.expected, "Fail: " ~ testCase);
 	}
-	scope(exit) glfwTerminate();
-
-
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	auto window = glfwCreateWindow(800, 600, "Thing", null, null);
-	assert(window !is null);
-	glfwMakeContextCurrent(window);
- 
-	auto vers = DerelictGL3.reload();
-
-
-  // Pass in the source
-  const auto source = "
-#version 410
- 
-
-layout(location=0) in vec3 position;
- 
-//uniform mat4 projection;
-//uniform mat4 view;
-//uniform mat4 model;
- 
-void main()
-{
-	//gl_Position = projection * view * model * vec4(position, 0);
-	gl_Position = vec4(position, 1);
 }
+
+
+
+
+
+void main()
+{
+// 	import derelict.opengl3.gl3;
+// 	import derelict.glfw3.glfw3;
+
+// 	import std.string;
+
+// 	DerelictGL3.load();
+// 	DerelictGLFW3.load();
+
+
+// 	if (!glfwInit())
+// 	{
+// 		writeln("couldn't load glfw");
+// 	}
+// 	scope(exit) glfwTerminate();
+
+
+// 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+// 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
+// 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+// 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+// 	auto window = glfwCreateWindow(800, 600, "Thing", null, null);
+// 	assert(window !is null);
+// 	glfwMakeContextCurrent(window);
  
-";
+// 	auto vers = DerelictGL3.reload();
+
+
+//   // Pass in the source
+//   const auto source = "
+// #version 410
+
+
+// layout(location=0) in vec3 position;
+ 
+// //uniform mat4 projection;
+// //uniform mat4 view;
+// //uniform mat4 model;
+ 
+// void main()
+// {
+
+//   int bob = 1, sue = 2;
+
+// 	//gl_Position = projection * view * model * vec4(position, 0);
+// 	gl_Position = vec4(position, 1);
+// }
+ 
+// ";
 	
 
-	GLuint shader = glCreateShader(GL_VERTEX_SHADER);
-	const(char*) p = source.ptr;
-	glShaderSource(shader, 1, &p, null);
+// 	GLuint shader = glCreateShader(GL_VERTEX_SHADER);
+// 	const(char*) p = source.ptr;
+// 	glShaderSource(shader, 1, &p, null);
 
 	
-	glCompileShader(shader);
+// 	glCompileShader(shader);
  
-	// Check Vertex Shader
-	int ret, logLen;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &ret);
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLen);
+// 	// Check Vertex Shader
+// 	int ret, logLen;
+// 	glGetShaderiv(shader, GL_COMPILE_STATUS, &ret);
+// 	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLen);
  
-	if (logLen > 1)
-	{
-		char[] log = new char[](logLen);
-		glGetShaderInfoLog(shader, logLen, null, log.ptr);
-		writeln("Shader compile log:\n", to!string(log));
-	}
+// 	if (logLen > 1)
+// 	{
+// 		char[] log = new char[](logLen);
+// 		glGetShaderInfoLog(shader, logLen, null, log.ptr);
+// 		writeln("Shader compile log:\n", to!string(log));
+// 	}
 	
 
 }

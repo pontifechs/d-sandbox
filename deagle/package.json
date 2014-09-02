@@ -7,7 +7,7 @@
 
 		"dflags-dmd": ["-J."],
 
-		"targetType": "executable",
+		"targetType": "library",
 
 		"dependencies": {
 				"derelict-gl3" : "~master",

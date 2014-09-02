@@ -71,9 +71,6 @@ Op < ">>>="
 
 # Sequence :TODO
 
-Struct <
-/ "struct" Identifier
-
 Initializer <
 / "{" ArgumentList ","? "}"
 
@@ -122,12 +119,73 @@ Constructor <
 ArgumentList <
 / Expression (',' Expression)* 
 
-Identifier <~ !(Keyword blank+)[a-zA-Z_] [a-zA-Z_0-9]*
+Identifier <~ !(Keyword blank+) [a-zA-Z_] [a-zA-Z_0-9]*
 
+TypeQualifier <
+/ SingleTypeQualifier+ 
+
+SingleTypeQualifier <
+/ StorageQualifier
+/ PrecisionQualifier
+/ InterpolationQualifier
+/ InvariantQualifier
+/ PreciseQualifier
+/ LayoutQualifier
+
+StorageQualifier <-
+/ "const"
+/ "inout"
+/ "in"
+/ "out"
+/ "centroid"
+/ "patch"
+/ "sample"
+/ "uniform"
+/ "buffer"
+/ "shared"
+/ "coherent"
+/ "volatile"
+/ "restrict"
+/ "readonly"
+/ "writeonly"
+/ "subroutine"
+# TODO:: do subroutines (seem like functions)/ "subroutine" "(" TypeList ")"
+
+TypeList <
+/ Type ("," Type)*
+
+LayoutQualifier <
+/ "layout" "(" LayoutQualifierList ")"
+
+LayoutQualifierList <
+/ Identifier ("=" DigitSequence)? ("," Identifier ("=" DigitSequence)?)*
+
+PrecisionQualifier <-
+/ "high_precision"
+/ "medium_precision"
+/ "low_precision"
+
+InterpolationQualifier <-
+/ "smooth"
+/ "flat"
+/ "noperspective"
+
+InvariantQualifier <-
+/ "invariant"
+
+PreciseQualifier <
+/ "precise"
+ 
 Keyword <-
 / Type
 / BooleanLiteral
-
+/ StorageQualifier
+/ PrecisionQualifier
+/ InterpolationQualifier
+/ InvariantQualifier
+/ PreciseQualifier
+/ "layout"
+ 
 Type <-
 / "bool"
 / "bvec2"
