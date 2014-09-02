@@ -1,5 +1,6 @@
 .dub/
 deagle/deagle
+glsl_grammar/glsl_grammar
 derelict-test
 package.userprefs
 *.a
