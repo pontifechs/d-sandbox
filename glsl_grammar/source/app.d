@@ -134,7 +134,6 @@ unittest
         "arr[one()]" : TestCaseInfo(["arr", "[", "one", "(", ")", "]"], true),
         "asdf.bob" : TestCaseInfo(["asdf", ".", "bob"], true),
         "vec.bob" : TestCaseInfo(["vec", ".", "bob"], true),
-        "bob()" : TestCaseInfo(["bob", "(", ")"], true),
         "thing().bob" : TestCaseInfo(["thing", "(", ")", ".", "bob"], true),
         "arr[1].bob" : TestCaseInfo(["arr", "[", "1", "]", ".", "bob"], true),
         ];
@@ -431,7 +430,29 @@ unittest
     }
 }
 
+// Function Call
+unittest
+{
+    writeln("Running Function Call cases...");
 
+    TestCaseInfo[string] cases = [
+        "bob()" : TestCaseInfo(["bob", "(", ")"], true), 
+        "bob(void)" : TestCaseInfo(["bob", "(", "void", ")"], true),       
+        "bob(bob(), bob(void))" : TestCaseInfo(["bob", "(", "bob", "(", ")", ",", "bob", "(", "void", ")", ")"], true),
+        "vec2(1.0, true)" : TestCaseInfo(["vec2", "(", "1.0", ",", "true", ")"], true),
+        "vec2(1.0, true" : TestCaseInfo(["vec2", "(", "1.0", ",", "true"], false),
+        "vec2 1.0, true)" : TestCaseInfo(["vec2", "1.0", ",", "true", ")"], false),
+        "vec2 (1.0, true)" : TestCaseInfo(["vec2", "(", "1.0", ",", "true", ")"], true),
+        ];
+
+    foreach (testCase; cases.keys)
+    {
+        auto parseTree = GLSL.FunctionCall(testCase);
+        auto info = cases[testCase];
+
+        assert((parseTree.matches == info.tree) == info.expected, "Fail: " ~ testCase);
+    }
+}
 
 
 void main()
