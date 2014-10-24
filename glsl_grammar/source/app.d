@@ -140,6 +140,8 @@ unittest
 
     foreach (testCase; cases.keys)
     {
+        writeln(testCase);
+        
         auto parseTree = GLSL.Postfix(testCase);
         auto info = cases[testCase];
 
@@ -443,6 +445,7 @@ unittest
         "vec2(1.0, true" : TestCaseInfo(["vec2", "(", "1.0", ",", "true"], false),
         "vec2 1.0, true)" : TestCaseInfo(["vec2", "1.0", ",", "true", ")"], false),
         "vec2 (1.0, true)" : TestCaseInfo(["vec2", "(", "1.0", ",", "true", ")"], true),
+        "bob.sue(1.0, true)" : TestCaseInfo(["bob", "," ,"sue", "(", "1.0", ",", "true", ")"], true),
         ];
 
     foreach (testCase; cases.keys)
@@ -453,6 +456,7 @@ unittest
         assert((parseTree.matches == info.tree) == info.expected, "Fail: " ~ testCase);
     }
 }
+
 
 
 void main()

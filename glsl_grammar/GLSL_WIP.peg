@@ -4,7 +4,6 @@ Expression <
 / AssignmentOps
 
 PrimaryExpression <
-/ FunctionCall
 / Identifier
 / FloatingLiteral
 / IntegerLiteral
@@ -311,5 +310,5 @@ TypeQualifier <
 / (SingleTypeQualifier)*
 
 FunctionCall <
-/ (Identifier / Type) "(" ("void" / ArgumentList)? ")"
+/ (Postfix / Type) "(" ("void" / ArgumentList)? ")"
 
