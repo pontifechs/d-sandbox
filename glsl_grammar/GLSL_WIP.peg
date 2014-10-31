@@ -11,14 +11,12 @@ PrimaryExpression <
 / "(" Expression ")"
 / Initializer
 
-
 Postfix < 
-/ PrimaryExpression 
-(
-  / "[" Expression "]"
-  / "." Expression
-)*
-("++" / "--")?
+/ (FunctionCall / PrimaryExpression) 
+  ("[" Expression "]" 
+  / "." Identifier
+  / "++"
+  / "--")* 
 
 Prefix <
 / ("++" / "--" / "+" / "-" / "~" / "!")? Postfix
@@ -59,6 +57,9 @@ LogicalOr <
 Selection <
 / LogicalOr ("?" LogicalOr ":" LogicalOr)?
 
+ConstantExpression <
+/ Selection
+
 AssignmentOps <
 / Selection (AssignOp Selection)?
 
@@ -71,9 +72,6 @@ AssignOp < ">>>="
 
 Struct <
 / "struct" Identifier
-
-Initializer <
-/ "{" ArgumentList ","? "}"
 
 BooleanLiteral <-
 / "true"
@@ -113,9 +111,6 @@ HexadecimalConstant <-
 
 IntegerSuffix <-
 / 'u' / 'U'
-
-Constructor <
-/ Type '(' ArgumentList? ')'
 
 ArgumentList <
 / Expression (',' Expression)* 
@@ -256,10 +251,10 @@ Type <-
 / "vec3"
 / "vec4"
 
-StorageQualifier <
+StorageQualifier <-
 / "const"
 / "inout"
-/ "in"
+/ "in" !("t") # I can't think of another way to get around this for now. These have to come before Types (int)
 / "out"
 / "centroid"
 / "patch"
@@ -272,8 +267,11 @@ StorageQualifier <
 / "restrict"
 / "readonly"
 / "writeonly"
-/ "subroutine" "(" Identifier ("," Identifier)* ")"
+/ SubroutineQualifier
 / "subroutine"
+
+SubroutineQualifier <
+/ "subroutine" "(" Identifier ("," Identifier)* ")"
 
 LayoutQualifier <
 / "layout" "(" LayoutLocation ("," LayoutLocation)* ")"
@@ -307,8 +305,37 @@ SingleTypeQualifier <-
 / PreciseQualifier
 
 TypeQualifier <
-/ (SingleTypeQualifier)*
+/ (SingleTypeQualifier)+
 
 FunctionCall <
-/ (Postfix / Type) "(" ("void" / ArgumentList)? ")"
+/ (Type / Identifier) "(" ("void" / ArgumentList)? ")"
 
+FunctionPrototype <
+/ FullySpecifiedType Identifier "(" ParameterList? ")"
+
+ParameterList <
+/ ParameterDeclarator ("," ParameterDeclarator)* 
+
+ParameterDeclarator <
+/ TypeSpecifier Identifier? ArraySpecifier?
+
+TypeSpecifier <
+/ Type ArraySpecifier? 
+
+ArraySpecifier <
+/ ("[]" / "[" ConstantExpression "]")+
+
+FullySpecifiedType <
+/ TypeQualifier* Type
+
+Declaration <
+/ FunctionPrototype ";"
+
+SingleDeclaration <
+/ FullySpecifiedType 
+/ FullySpecifiedType Identifier
+/ FullySpecifiedType Identifier ArraySpecifier? ("=" Initializer)?
+
+Initializer <
+/ AssignmentOps
+/ "{" (Initializer ",")+ "}"

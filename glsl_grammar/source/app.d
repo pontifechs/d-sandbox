@@ -9,8 +9,6 @@ mixin(grammar(GLSL_WIP));
 
 alias Tuple!(string[], "tree", bool, "expected") TestCaseInfo;
 
-
-
 // identifier
 unittest
 {
@@ -134,13 +132,13 @@ unittest
         "arr[one()]" : TestCaseInfo(["arr", "[", "one", "(", ")", "]"], true),
         "asdf.bob" : TestCaseInfo(["asdf", ".", "bob"], true),
         "vec.bob" : TestCaseInfo(["vec", ".", "bob"], true),
-        "thing().bob" : TestCaseInfo(["thing", "(", ")", ".", "bob"], true),
+        "thing().bob " : TestCaseInfo(["thing", "(", ")", ".", "bob"], true),
         "arr[1].bob" : TestCaseInfo(["arr", "[", "1", "]", ".", "bob"], true),
+        "bob.sue(1.0, true)" : TestCaseInfo(["bob", "," ,"sue", "(", "1.0", ",", "true", ")"], false),
         ];
 
     foreach (testCase; cases.keys)
     {
-        writeln(testCase);
         
         auto parseTree = GLSL.Postfix(testCase);
         auto info = cases[testCase];
@@ -157,7 +155,7 @@ unittest
     TestCaseInfo[string] cases = [ 
         "!true" : TestCaseInfo(["!", "true"], true),
         "-arr[0]" : TestCaseInfo(["-", "arr", "[", "0", "]"], true),
-        "!one(arr[1.0]))" : TestCaseInfo(["!", "one", "(", "arr", "[", "1.0", "]", ")"], true),
+        "!one(arr[1.0])" : TestCaseInfo(["!", "one", "(", "arr", "[", "1.0", "]", ")"], true),
         "(true)" : TestCaseInfo(["(", "true", ")"], true),
         ];
 
@@ -445,7 +443,6 @@ unittest
         "vec2(1.0, true" : TestCaseInfo(["vec2", "(", "1.0", ",", "true"], false),
         "vec2 1.0, true)" : TestCaseInfo(["vec2", "1.0", ",", "true", ")"], false),
         "vec2 (1.0, true)" : TestCaseInfo(["vec2", "(", "1.0", ",", "true", ")"], true),
-        "bob.sue(1.0, true)" : TestCaseInfo(["bob", "," ,"sue", "(", "1.0", ",", "true", ")"], true),
         ];
 
     foreach (testCase; cases.keys)
@@ -457,7 +454,46 @@ unittest
     }
 }
 
+// Parameter
+unittest
+{   
+    writeln("Running Parameter cases...");
 
+    TestCaseInfo[string] cases = [
+        "int bob" : TestCaseInfo(["int", "bob"], true),
+        "int bob, int bob" : TestCaseInfo(["int", "bob", ",", "int", "bob"], true),
+        "int, int" : TestCaseInfo(["int", ",", "int"], true),
+    ];
+
+    foreach (testCase; cases.keys)
+    {
+        auto parseTree = GLSL.ParameterList(testCase);
+        auto info = cases[testCase];
+
+        assert((parseTree.matches == info.tree) == info.expected, "Fail: " ~ testCase);
+    }
+}
+
+
+// FunctionPrototype
+unittest
+{   
+    writeln("Running FunctionPrototype cases...");
+
+    TestCaseInfo[string] cases = [
+        "int bob()" : TestCaseInfo(["int", "bob", "(", ")"], true),
+        "vec2 thing(int one, vec2 two)" : TestCaseInfo(["vec2", "thing", "(", "int", "one", ",", "vec2", "two", ")"], true),        
+        "float bob(int, float)" : TestCaseInfo(["float", "bob", "(", "int", ",", "float",")"], true),        
+        "const uint sue(int, int bob)" : TestCaseInfo(["const", "uint", "sue", "(", "int", ",", "int", "bob", ")"], true),    
+    ];
+    foreach (testCase; cases.keys)
+    {
+        auto parseTree = GLSL.FunctionPrototype(testCase);
+        auto info = cases[testCase];
+
+        assert((parseTree.matches == info.tree) == info.expected, "Fail: " ~ testCase);
+    }
+}
 
 void main()
 {
