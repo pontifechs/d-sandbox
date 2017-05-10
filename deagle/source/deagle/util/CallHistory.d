@@ -19,7 +19,7 @@ public:
 	// Clear
 	void clear()
 	{
-		calls.clear();
+		calls = [];
 	}
 
 	ulong length() const @property

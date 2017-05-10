@@ -35,32 +35,12 @@ class Transform(uint dimension) : Matrix!(dimension + 1, dimension + 1, float)
 		}
 	}
 
-
-	// A valid transformation will have a few qualities
-	//  1. Bottom row is 0^T 1
-	//  2. The rotation kernel (either 2x2 or 3x3 matrix) forms
-	//     an orthogonal basis.
-	//     (I don't plan on needing shears, but I can amend this if needed)
-	invariant()
-	{
-		// !! CAN'T USE ANY PUBLIC FUNCTIONS !! (Recursive malarkey!)
-    // 1. Bottom row is [0^T 1]
-		for (int col = 0; col < dimension; ++col)
-		{
-			assert(this.m_data[this.i(dimension, col)] == 0, 
-						 "Invalid Transform -- Bottom row non-zero");
-		}
-		assert(this.m_data[this.i(dimension, dimension)] == 1, 
-					 "Invalid Transform -- Bottom right not one");
-
-	}
-
 	public bool orthogonal() @property
 	{
 		// 2. Rotation kernel is an orthogonal basis
-		auto x = new Vector!(3)([this[0,0], this[1,0], this[2,0]]);
-		auto y = new Vector!(3)([this[0,1], this[1,1], this[2,1]]);
-		auto z = new Vector!(3)([this[0,2], this[1,2], this[2,2]]);
+		auto x = Vector!(3)([this[0,0], this[1,0], this[2,0]]);
+		auto y = Vector!(3)([this[0,1], this[1,1], this[2,1]]);
+		auto z = Vector!(3)([this[0,2], this[1,2], this[2,2]]);
 
 		return ((x.cross(y) == z) && (z.cross(x) == y) && (y.cross(z) == x));
 	}
@@ -82,11 +62,6 @@ class Transform(uint dimension) : Matrix!(dimension + 1, dimension + 1, float)
 
 		return new Transform!3(rotationKernel);
 	}
-
-	// public Tuple(Vector!(3), "axis", float, "angle") axisAngle()
-	// {
-	
-  // }
 
 	// Rotate around X
 	static Transform!3 rotateX(float theta)
@@ -241,23 +216,22 @@ unittest // Scale
 		float a1 = uniform(0.0f, 10.0f, gen);
 		float a2 = uniform(0.0f, 10.0f, gen);
 		float a3 = uniform(0.0f, 10.0f, gen);
-		auto toScale = new Vector!(4)([a1, a2, a3, 1.0f]);
+		auto toScale = Vector!(4)([a1, a2, a3, 1.0f]);
 
 		float s1 = uniform(0.0f, 10.0f, gen);
 		float s2 = uniform(0.0f, 10.0f, gen);
 		float s3 = uniform(0.0f, 10.0f, gen);
-		auto scaleVec = new Vector!(3)([s1, s2, s3]);
+		auto scaleVec = Vector!(3)([s1, s2, s3]);
 
 		auto scale = Transform!3.scale(scaleVec);
 
-		auto expScaled = new Vector!(4)([a1*s1, a2*s2, a3*s3, 1.0f]);
+		auto expScaled = Vector!(4)([a1*s1, a2*s2, a3*s3, 1.0f]);
 
-		auto bob = scale * toScale;
+		Vector!(4) bob = scale * toScale;
+
 		assert(bob == expScaled, "Scale incorrect");
 	}
-
 }
-
  
 unittest // Translate
 {
@@ -269,16 +243,16 @@ unittest // Translate
 		float a1 = uniform(0.0f, 10.0f, gen);
 		float a2 = uniform(0.0f, 10.0f, gen);
 		float a3 = uniform(0.0f, 10.0f, gen);
-		auto toTrans = new Vector!(4)([a1, a2, a3, 1.0f]);
+		auto toTrans = Vector!(4)([a1, a2, a3, 1.0f]);
 
 		float t1 = uniform(0.0f, 10.0f, gen);
 		float t2 = uniform(0.0f, 10.0f, gen);
 		float t3 = uniform(0.0f, 10.0f, gen);
-		auto transVec = new Vector!(3)([t1, t2, t3]);
+		auto transVec = Vector!(3)([t1, t2, t3]);
 
 		auto trans = Transform!3.translate(transVec);
 		
-		auto expTransed = new Vector!(4)([a1+t1, a2+t2, a3+t3, 1.0f]);
+		auto expTransed = Vector!(4)([a1+t1, a2+t2, a3+t3, 1.0f]);
 		assert(trans * toTrans == expTransed, "Trans incorrect");
 	}
 }

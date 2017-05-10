@@ -7,31 +7,36 @@ import std.array; // array
 import std.conv; // to!
 import std.stdio;
 
-import deagle.math.Matrix;
 
-class Vector(uint size = 4, T = float) : Matrix!(1,size,T)
+struct Vector(uint size = 4, T = float)
   if (isNumeric!(T) && size > 0)
 {
 	// Initialize all elements to 0
-	this()
+	static Vector!(size, T) opCall()
 	{
-		this.m_data[] = 0;
+		Vector!(size, T) ret;
+		ret.m_data[] = 0;
+		return ret;
 	}
 	
 	// Initialize all elements to fill
-	this(T fill)
+	static Vector!(size, T) opCall(T fill)
 	{
-		super(fill);
+		Vector!(size, T) ret;
+		ret.m_data[] = fill;
+		return ret;
 	}
 
 	// Initialize with arbitrary elements
-	this(T[size] arbitrary)
+	static Vector!(size, T) opCall(T[size] arbitrary)
 	{
-		super(arbitrary);
+		Vector!(size, T) ret;
+		ret.m_data = arbitrary.dup;
+		return ret;
 	}
 
 	// Returns the element at the given index
-  public T opIndex(uint index) const
+	public T opIndex(uint index) const
 	{
 		return m_data[index];
 	}
@@ -41,7 +46,7 @@ class Vector(uint size = 4, T = float) : Matrix!(1,size,T)
 	{
 		return m_data[index] = val;
 	}
-	
+
 	// Named element accesses (x,y,z,w)
 	static if (size >= 1)
 	{
@@ -91,15 +96,12 @@ class Vector(uint size = 4, T = float) : Matrix!(1,size,T)
 		}
 	}
 
-	// // Operator Overloads
-	// // Equality
-	// override bool opEquals(Object o) const
-	// {
-	// 	Vector rhs = to!(Vector)(o); // I'm sorry, but this is kinda stupid methinks.		
-	// 	writeln(this);
-	// 	writeln(rhs);
-	// 	return equal!(approxEqual)(this.data[], rhs.data[]);
-	// }
+	// Operator Overloads
+	// Equality
+	bool opEquals()(auto ref const Vector rhs) const
+	{
+		return equal!(approxEqual)(this.m_data[], rhs.m_data[]);
+	}
 
 	// Plus, Minus
 	Vector opBinary(string op)(Vector rhs) 
@@ -111,7 +113,7 @@ class Vector(uint size = 4, T = float) : Matrix!(1,size,T)
 		{
 			mixin("newData[i] = newData[i] " ~ op ~ " rhs.m_data[i];");
 		}
-		return new Vector(newData);
+		return Vector(newData);
 	}
 	
 	// Multiply/Divide by scalar
@@ -125,7 +127,7 @@ class Vector(uint size = 4, T = float) : Matrix!(1,size,T)
 			mixin("newData[i] = newData[i] " ~ op ~ "rhs;");
 		}
 
-		return new Vector(newData);
+		return Vector(newData);
 	}
 
 	// Length
@@ -156,17 +158,6 @@ class Vector(uint size = 4, T = float) : Matrix!(1,size,T)
 		return this.dot(rhs);
 	}
 
-	Matrix!(size,size,T) outer(Vector rhs)
-	{
-		// Thankfully enough, this already in column major order, so no issues there.
-		auto cartProduct = cartesianProduct(this.m_data[], rhs.m_data[]);
-	
-		// Multiply each tuple value together
-		T[size*size] cartProductMultMap = array(map!"a[0] * a[1]"(cartProduct));
-	
-		return new Matrix!(size,size,T)(cartProductMultMap);
-	}
-
 	// Cross product (only defined in 3-space)
 	static if (size == 3)
 	{
@@ -175,38 +166,26 @@ class Vector(uint size = 4, T = float) : Matrix!(1,size,T)
 			T newX = (this.y * rhs.z) - (this.z * rhs.y);
 			T newY = (this.z * rhs.x) - (this.x * rhs.z);
 			T newZ = (this.x * rhs.y) - (this.y * rhs.x);
-			return new Vector([newX, newY, newZ]);
-		}
-
-		// Skew matrix
-		public Matrix!(size,size,T) skew()
-		{
-			auto ret = new Matrix!(size,size,T)();
-			ret[0,0] = 0;
-			ret[0,1] = -this.z;
-			ret[0,2] = this.y;
-
-			ret[1,0] = this.z;
-			ret[1,1] = 0;
-			ret[1,2] = -this.x;
-
-			ret[2,0] = -this.y;
-			ret[2,1] = this.x;
-			ret[2,2] = 0;
-			return ret;
+			return Vector!(size, T)([newX, newY, newZ]);
 		}
 	}	
 
-	override string toString() const
+	string toString() const
 	{
 		return to!string(m_data);
 	}
-}
 
+	T[] opIndex()
+	{
+		return m_data[];
+	}
+
+	private T[size] m_data;
+}
 
 unittest // Default initialization
 {
-	auto v = new Vector!(3)();
+	auto v = Vector!(3)();
 	
 	for (int i = 0; i < v.m_data.length; ++i)
 	{
@@ -216,7 +195,7 @@ unittest // Default initialization
 
 unittest // Fill initialization
 {
-	auto v = new Vector!(4)(9);
+	auto v = Vector!(4)(9);
 	
 	for (int i = 0; i < v.m_data.length; ++i)
 	{
@@ -227,7 +206,7 @@ unittest // Fill initialization
 unittest // Arbitrary Initialization
 {
 	float[3] exp = [9,8,7];
-	auto v = new Vector!(3)(exp);
+	auto v = Vector!(3)(exp);
 
 	for (int i = 0; i < exp.length; ++i)
 	{
@@ -238,7 +217,7 @@ unittest // Arbitrary Initialization
 unittest // Index operations
 {
 	float[3] exp = [9,8,7];
-	auto v = new Vector!(3)(exp);
+	auto v = Vector!(3)(exp);
 
 
 	for (int i = 0; i < exp.length; ++i)
@@ -256,7 +235,7 @@ unittest // Index operations
 
 unittest // named element access (x,y,z,, etc.
 {
-	auto v = new Vector!(4)([1,2,3,4]);
+	auto v = Vector!(4)([1,2,3,4]);
 
 	// Get
 	assert(v.x == 1, "Named element access Failed x");
@@ -279,11 +258,10 @@ unittest // named element access (x,y,z,, etc.
 
 unittest // Named elements don't appear larger than the vector they're on
 {
-
-	auto v1 = new Vector!(1)([1]);
-	auto v2 = new Vector!(2)([1,2]);
-	auto v3 = new Vector!(3)([1,2,3]);
-	auto v4 = new Vector!(4)([1,2,3,4]);
+	auto v1 = Vector!(1)([1]);
+	auto v2 = Vector!(2)([1,2]);
+	auto v3 = Vector!(3)([1,2,3]);
+	auto v4 = Vector!(4)([1,2,3,4]);
 
 	// Check that we can't access letters that don't exist
 	assert(!__traits(compiles, v1.y), "bad Y prop include");
@@ -299,9 +277,9 @@ unittest // Named elements don't appear larger than the vector they're on
 
 unittest // Equality
 {
-	auto v1 = new Vector!(4)([1,2,3,4]);
-	auto v2 = new Vector!(4)([4,3,2,1]);
-	auto v3 = new Vector!(4)([1,2,3,4]);
+	auto v1 = Vector!(4)([1,2,3,4]);
+	auto v2 = Vector!(4)([4,3,2,1]);
+	auto v3 = Vector!(4)([1,2,3,4]);
 
 	assert(v1 == v3, "Equality failure");
 	assert(v1 != v2, "Inequality failure");
@@ -309,8 +287,8 @@ unittest // Equality
 
 unittest // Addition, subtraction
 {
-	auto v1 = new Vector!(4)([1,2,3,4]);
-	auto exp = new Vector!(4)([2,4,6,8]);
+	auto v1 = Vector!(4)([1,2,3,4]);
+	auto exp = Vector!(4)([2,4,6,8]);
 
 	// Add it together
 	auto vAdd = v1 + v1;
@@ -319,8 +297,8 @@ unittest // Addition, subtraction
 
 unittest // Multiply/Divide by scalar
 {
-	auto v1 = new Vector!(4)([1,2,3,4]);
-	auto exp = new Vector!(4)([2,4,6,8]);
+	auto v1 = Vector!(4)([1,2,3,4]);
+	auto exp = Vector!(4)([2,4,6,8]);
 	
 	// Multiply by 2
 	auto vMult = v1 * 2;
@@ -333,48 +311,32 @@ unittest // Multiply/Divide by scalar
 
 unittest // Length
 {
-	auto v1 = new Vector!(4)([1,2,3,4]);
+	auto v1 = Vector!(4)([1,2,3,4]);
 	assert(v1.length == sqrt(1.0f + 4.0f + 9.0f + 16.0f), "length failure");
 }
 
 unittest // Normalize
 {
-	auto v = new Vector!(4)([1,2,3,4]);
+	auto v = Vector!(4)([1,2,3,4]);
 	assert(approxEqual(v.normalize().length, 1), "Normalized doesn't have length 1");
 
 }
 
 unittest // 3-space dot
 {
-	auto v1 = new Vector!(4)([1,2,3,4]);
+	auto v1 = Vector!(4)([1,2,3,4]);
 	
 	assert(v1.dot(v1) == (1+4+9+16), "Dot failure");
 	assert(v1.inner(v1) == (1+4+9+16), "Inner failure");
 }
 
-unittest // outer product
-{
-	auto v = new Vector!(3)([1,2,3]);
-	
-	auto exp = new Matrix!(3,3)([1,2,3, 2,4,6, 3,6,9]);
-
-	assert(v.outer(v) == exp, "Outer product failure");
-
-}
-
 unittest // 3-space cross
 {
-	auto x = new Vector!(3)([1,0,0]);
-	auto y = new Vector!(3)([0,1,0]);
-	auto z = new Vector!(3)([0,0,1]);
+	auto x = Vector!(3)([1,0,0]);
+	auto y = Vector!(3)([0,1,0]);
+	auto z = Vector!(3)([0,0,1]);
 
 	assert(x.cross(y) == z, "x * y != z");
 	assert(y.cross(z) == x, "y * z != x");
 	assert(z.cross(x) == y, "z * x != y");
 }
-
-unittest // Skew-symmetric
-{
-	// TODO:: Generate a bunch of these with matlab or octave or something
-}
-

@@ -8,6 +8,8 @@ import std.conv; //to!string
 import std.math; // approxEqual
 import std.algorithm; // equal
 
+import deagle.math.Vector;
+
 // A column-major square Matrix of type T of size size.
 class Matrix(uint colCt = 4, uint rowCt = 4, T = float) 
 	if (isNumeric!(T) && colCt > 0 && rowCt > 0) // Only valid on numeric types
@@ -52,7 +54,7 @@ public:
 	}	
 
 	// Returns the element at the given row and column
-  T opIndex(uint row, uint col) const
+  	T opIndex(uint row, uint col) const
 	{
 		return m_data[i(row,col)];
 	}
@@ -88,7 +90,7 @@ public:
 	}
 	
 	// Return a colsx1 matrix (a row-vector)
-	Matrix!(colCt, 1, T) row(uint row) const
+	Vector!(colCt, T) row(uint row) const
 	{
 		// Build a vector from this row of the matrix
 		T[colCt] rowVecData = 0;
@@ -96,18 +98,18 @@ public:
 		{
 			rowVecData[i] = m_data[this.i(row,i)];
 		}
-		return new Matrix!(colCt, 1, T)(rowVecData);
+		return Vector!(colCt, T)(rowVecData);
 	} 
 	
 	// Return a 1xrows matrix (a col-vector)
-	Matrix!(1, rowCt, T) col(uint col) const
+	Vector!(rowCt, T) col(uint col) const
 	{
 		T[rowCt] colVecData = 0;
 		for (uint i = 0; i < rowCt; ++i)
 		{
 			colVecData[i] = m_data[this.i(i,col)];
 		}
-		return new Matrix!(1, rowCt, T)(colVecData);
+		return Vector!(rowCt, T)(colVecData);
 	}
 	
 	// Matrix Multiply
@@ -124,28 +126,29 @@ public:
 		for (uint row = 0; row < rowCt; ++row)
 		{
 			auto rowVec = this.row(row);
-
 		
 			for (uint col = 0; col < rhsColCt; ++col)
 			{
 				auto colVec = rhs.col(col);
-
-				// Dot the vectors together
-				for (int rowrow = 0; rowrow < rowCt; ++rowrow)
-				{
-
-					newData[i(row,col)] += rowVec.m_data[rowrow] * colVec.m_data[rowrow];
-				}
-
-				// element-wise multiply, then add
-				auto mults = new T[rowCt];
-				mults[] = rowVec.m_data[] * colVec.m_data[];
-				newData[i(row,col)] = reduce!"a+b"(mults);
+				newData[i(row,col)] = rowVec.dot(colVec);
 			}
 		}
 		return new Matrix!(rhsColCt, rowCt)(newData);
 	}
-	
+
+	// Vector multiply
+	Vector!(colCt, T) opBinary(string op)(Vector!(colCt, T) rhs)
+	{
+		T[colCt] newData = 0;
+		for (uint row = 0; row < rowCt; ++row)
+		{
+			auto rowVec = this.row(row);
+			newData[row] = rowVec.dot(rhs);
+		}
+
+		return Vector!(colCt, T)(newData);
+	}
+
 	// matrix addition
 	Matrix opBinary(string op)(Matrix rhs) const
 		if (op == "+")
@@ -164,6 +167,42 @@ public:
 		return new Matrix(newData);
 	}
 }
+
+// UFCS for some Vector niceities
+Matrix!(3, 3, T) outer(T)(Vector!(3, T) lhs, Vector!(3, T) rhs)
+{
+	import std.array;
+
+	// Thankfully enough, this already in column major order, so no issues there.
+	auto cartProduct = cartesianProduct(lhs[], rhs[]);
+
+	// Multiply each tuple value together
+	T[9] cartProductMultMap = array(map!"a[0] * a[1]"(cartProduct));
+
+	return new Matrix!(3,3,T)(cartProductMultMap);
+}
+
+
+
+// Skew matrix
+public Matrix!(3,3,T) skew(T)(Vector!(3, T) lhs)
+{
+	auto ret = new Matrix!(3,3,T)();
+	ret[0,0] = 0;
+	ret[0,1] = -lhs.z;
+	ret[0,2] = lhs.y;
+
+	ret[1,0] = lhs.z;
+	ret[1,1] = 0;
+	ret[1,2] = -lhs.x;
+
+	ret[2,0] = -lhs.y;
+	ret[2,1] = lhs.x;
+	ret[2,2] = 0;
+	return ret;
+}
+
+
 
 unittest // Identity
 {
@@ -254,23 +293,21 @@ unittest // Indexing operations
 	}
 }
 
-
 unittest // row/col access
 {
 	float[9] exp = [1,2,3, 4,5,6, 7,8,9];
 	
 	auto m = new Matrix!(3,3)(exp);
 
-	assert(m.row(0) == new Matrix!(3,1)([1, 4, 7]), "Row 0 access failure");
-	assert(m.row(1) == new Matrix!(3,1)([2, 5, 8]), "Row 1 access failure");
-	assert(m.row(2) == new Matrix!(3,1)([3, 6, 9]), "Row 2 access failure");
+	assert(m.row(0) == Vector!(3)([1, 4, 7]), "Row 0 access failure");
+	assert(m.row(1) == Vector!(3)([2, 5, 8]), "Row 1 access failure");
+	assert(m.row(2) == Vector!(3)([3, 6, 9]), "Row 2 access failure");
 
 
-	assert(m.col(0) == new Matrix!(1,3)([1, 2, 3]), "Col 0 access failure");
-	assert(m.col(1) == new Matrix!(1,3)([4, 5, 6]), "Col 1 access failure");
-	assert(m.col(2) == new Matrix!(1,3)([7, 8, 9]), "Col 2 access failure");
+	assert(m.col(0) == Vector!(3)([1, 2, 3]), "Col 0 access failure");
+	assert(m.col(1) == Vector!(3)([4, 5, 6]), "Col 1 access failure");
+	assert(m.col(2) == Vector!(3)([7, 8, 9]), "Col 2 access failure");
 }
-
 
 unittest // equality
 {
@@ -318,5 +355,15 @@ unittest // Matrix-constant multiply
 	
 	assert(m * 9 == expM, "Matrix/Constant failure");
 
+}
+
+unittest // Matrix-Vector multiply
+{
+	auto I = new Matrix!(3,3)();
+
+	float[3] exp = [1, 2, 3];
+	auto expV = Vector!(3)(exp);
+
+	assert(I * expV == expV, "Matrix/Vector multiply by identity was not reflexive");
 }
 
